@@ -101,51 +101,46 @@ class KotlinHLImplicitThisInspection : AbstractHLInspection<KtExpression, Kotlin
 
     override val presentation: HLPresentation<KtExpression> = presentation { highlightType(ProblemHighlightType.INFORMATION) }
 
-    override val applicator: HLApplicator<KtExpression, ImplicitReceiverInfo> = KotlinHLImplicitThisInspection.applicator
-
-    companion object {
-
-        val applicator = applicator<KtExpression, ImplicitReceiverInfo> {
-            familyAndActionName(KotlinBundle.lazyMessage(("inspection.implicit.this.display.name")))
-            isApplicableByPsi { expression ->
-                when (expression) {
-                    is KtSimpleNameExpression -> {
-                        if (expression !is KtNameReferenceExpression) return@isApplicableByPsi false
-                        if (expression.parent is KtThisExpression) return@isApplicableByPsi false
-                        if (expression.parent is KtCallableReferenceExpression) return@isApplicableByPsi false
-                        if (expression.isSelectorOfDotQualifiedExpression()) return@isApplicableByPsi false
-                        val parent = expression.parent
-                        if (parent is KtCallExpression && parent.isSelectorOfDotQualifiedExpression()) return@isApplicableByPsi false
-                        true
-                    }
-                    is KtCallableReferenceExpression -> expression.receiverExpression == null
-                    else -> false
+    override val applicator: HLApplicator<KtExpression, ImplicitReceiverInfo> = applicator<KtExpression, ImplicitReceiverInfo> {
+        familyAndActionName(KotlinBundle.lazyMessage(("inspection.implicit.this.display.name")))
+        isApplicableByPsi { expression ->
+            when (expression) {
+                is KtSimpleNameExpression -> {
+                    if (expression !is KtNameReferenceExpression) return@isApplicableByPsi false
+                    if (expression.parent is KtThisExpression) return@isApplicableByPsi false
+                    if (expression.parent is KtCallableReferenceExpression) return@isApplicableByPsi false
+                    if (expression.isSelectorOfDotQualifiedExpression()) return@isApplicableByPsi false
+                    val parent = expression.parent
+                    if (parent is KtCallExpression && parent.isSelectorOfDotQualifiedExpression()) return@isApplicableByPsi false
+                    true
                 }
-            }
-            applyTo { expression, input ->
-                expression.addImplicitThis(input)
+                is KtCallableReferenceExpression -> expression.receiverExpression == null
+                else -> false
             }
         }
-
-        private fun KtExpression.isSelectorOfDotQualifiedExpression(): Boolean {
-            val parent = parent
-            return parent is KtDotQualifiedExpression && parent.selectorExpression == this
+        applyTo { expression, input ->
+            expression.addImplicitThis(input)
         }
+    }
 
-        private fun KtExpression.addImplicitThis(input: ImplicitReceiverInfo) {
-            val reference = if (this is KtCallableReferenceExpression) callableReference else this
-            val thisExpressionText = if (input.isUnambiguousLabel) "this" else "this@${input.receiverLabel?.render()}"
-            val factory = KtPsiFactory(this)
-            with(reference) {
-                when (parent) {
-                    is KtCallExpression -> parent.replace(factory.createExpressionByPattern("$0.$1", thisExpressionText, parent))
-                    is KtCallableReferenceExpression -> parent.replace(
-                        factory.createExpressionByPattern(
-                            "$0::$1", thisExpressionText, this
-                        )
+    private fun KtExpression.isSelectorOfDotQualifiedExpression(): Boolean {
+        val parent = parent
+        return parent is KtDotQualifiedExpression && parent.selectorExpression == this
+    }
+
+    private fun KtExpression.addImplicitThis(input: ImplicitReceiverInfo) {
+        val reference = if (this is KtCallableReferenceExpression) callableReference else this
+        val thisExpressionText = if (input.isUnambiguousLabel) "this" else "this@${input.receiverLabel?.render()}"
+        val factory = KtPsiFactory(this)
+        with(reference) {
+            when (parent) {
+                is KtCallExpression -> parent.replace(factory.createExpressionByPattern("$0.$1", thisExpressionText, parent))
+                is KtCallableReferenceExpression -> parent.replace(
+                    factory.createExpressionByPattern(
+                        "$0::$1", thisExpressionText, this
                     )
-                    else -> this.replace(factory.createExpressionByPattern("$0.$1", thisExpressionText, this))
-                }
+                )
+                else -> this.replace(factory.createExpressionByPattern("$0.$1", thisExpressionText, this))
             }
         }
     }
