@@ -6,10 +6,7 @@ import com.intellij.psi.PsiMethod
 import org.jetbrains.annotations.ApiStatus
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtBinaryExpression
-import org.jetbrains.uast.UBinaryExpression
-import org.jetbrains.uast.UElement
-import org.jetbrains.uast.UIdentifier
-import org.jetbrains.uast.UastBinaryOperator
+import org.jetbrains.uast.*
 
 @ApiStatus.Internal
 class KotlinUBinaryExpression(
@@ -40,8 +37,15 @@ class KotlinUBinaryExpression(
         KotlinUIdentifier(sourcePsi.operationReference.getReferencedNameElement(), this)
     }
 
-    override fun resolveOperator(): PsiMethod? =
-        baseResolveProviderService.resolveCall(sourcePsi)
+    override fun resolveOperator(): PsiMethod? {
+        baseResolveProviderService.resolveCall(sourcePsi)?.let { return it }
+        return when {
+            operator == UastBinaryOperator.ASSIGN && leftOperand is UArrayAccessExpression -> {
+                (leftOperand as UArrayAccessExpression).resolve() as? PsiMethod
+            }
+            else -> null
+        }
+    }
 
     override val operator: UastBinaryOperator
         get() = when (sourcePsi.operationToken) {
