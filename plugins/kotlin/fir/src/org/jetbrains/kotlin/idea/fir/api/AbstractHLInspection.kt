@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.analysis.api.KtAllowAnalysisOnEdt
 import org.jetbrains.kotlin.analysis.api.analyzeWithReadAction
 import org.jetbrains.kotlin.analysis.api.lifetime.allowAnalysisOnEdt
 import org.jetbrains.kotlin.idea.inspections.AbstractKotlinInspection
+import org.jetbrains.kotlin.idea.inspections.findExistingEditor
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtVisitorVoid
 import kotlin.reflect.KClass
@@ -101,7 +102,7 @@ private fun <PSI : PsiElement, INPUT : HLApplicatorInput> HLApplicator<PSI, INPU
         val element = descriptor.psiElement as PSI
 
         if (isApplicableByPsi(element, project) && input.isValidFor(element)) {
-            applyTo(element, input, project, editor = null)
+            applyTo(element, input, project, element.findExistingEditor())
         }
     }
 
