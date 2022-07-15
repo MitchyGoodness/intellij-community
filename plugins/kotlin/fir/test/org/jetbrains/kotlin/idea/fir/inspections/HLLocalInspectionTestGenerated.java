@@ -251,6 +251,34 @@ public abstract class HLLocalInspectionTestGenerated extends AbstractHLLocalInsp
     }
 
     @RunWith(JUnit3RunnerWithInners.class)
+    @TestMetadata("../idea/tests/testData/inspectionsLocal/redundantElvisReturnNull")
+    public static class RedundantElvisReturnNull extends AbstractHLLocalInspectionTest {
+        private void runTest(String testDataFilePath) throws Exception {
+            KotlinTestUtils.runTest(this::doTest, this, testDataFilePath);
+        }
+
+        @TestMetadata("basic.kt")
+        public void testBasic() throws Exception {
+            runTest("../idea/tests/testData/inspectionsLocal/redundantElvisReturnNull/basic.kt");
+        }
+
+        @TestMetadata("notInReturn.kt")
+        public void testNotInReturn() throws Exception {
+            runTest("../idea/tests/testData/inspectionsLocal/redundantElvisReturnNull/notInReturn.kt");
+        }
+
+        @TestMetadata("notReturnNull.kt")
+        public void testNotReturnNull() throws Exception {
+            runTest("../idea/tests/testData/inspectionsLocal/redundantElvisReturnNull/notReturnNull.kt");
+        }
+
+        @TestMetadata("uselessElvis.kt")
+        public void testUselessElvis() throws Exception {
+            runTest("../idea/tests/testData/inspectionsLocal/redundantElvisReturnNull/uselessElvis.kt");
+        }
+    }
+
+    @RunWith(JUnit3RunnerWithInners.class)
     @TestMetadata("testData/inspectionsLocal")
     public abstract static class InspectionsLocal extends AbstractHLLocalInspectionTest {
         @RunWith(JUnit3RunnerWithInners.class)
